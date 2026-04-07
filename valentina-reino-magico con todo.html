@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>El Reino de Valentina 👑</title>
+<meta name="theme-color" content="#C26DFF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Reino Valentina">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/socramtv/Valentina_app/refs/heads/main/icon-512.png">
+<link rel="manifest" id="pwaManifest">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+:root{--pink:#FF6EB4;--rose:#FF3D9A;--purple:#C26DFF;--lavender:#E8B4FF;--gold:#FFD700;--amber:#FFA500;--coral:#FF7F7F;--green:#2ECC40;}
+*{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation;}
+body{font-family:'Fredoka One',cursive;background:#FFE4F0;min-height:100vh;overflow:hidden;user-select:none;-webkit-user-select:none;}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden;}
+.screen.active{display:flex;}
+/* BACK BAR */
+.back-bar{position:sticky;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:8px 12px;backdrop-filter:blur(10px);z-index:100;width:100%;flex-shrink:0;}
+.back-btn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.25);border:3px solid rgba(255,255,255,0.6);border-radius:50px;padding:7px 16px;font-family:'Fredoka One',cursive;font-size:clamp(14px,3.5vw,18px);color:#fff;cursor:pointer;transition:transform 0.15s;text-shadow:1px 1px 3px rgba(0,0,0,0.3);white-space:nowrap;}
+.back-btn:active{transform:scale(0.95);}
+.back-btn-dark{background:rgba(0,0,0,0.3);border-color:rgba(255,255,255,0.4);}
+.back-bar-title{flex:1;color:#fff;font-size:clamp(14px,3.8vw,21px);text-align:center;text-shadow:1px 1px 4px rgba(0,0,0,0.3);}
+/* INSTALL BTN */
+#installBtn{position:fixed;top:10px;right:10px;z-index:9999;background:linear-gradient(135deg,#C26DFF,#8A2BE2);border:3px solid #fff;border-radius:50px;padding:8px 14px;color:#fff;font-family:'Fredoka One',cursive;font-size:14px;cursor:pointer;display:none;align-items:center;gap:5px;box-shadow:0 4px 14px rgba(138,43,226,0.5);transition:transform 0.2s;white-space:nowrap;}
+#installBtn:active{transform:scale(0.95);}
+#installBtn.show{display:flex;}
+/* STARS BG */
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle linear infinite;}
+@keyframes twinkle{0%,100%{opacity:0.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+/* COMMON ANIMATIONS */
+@keyframes castleFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulseBtn{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes cloudFloat{0%{transform:translateX(-250px)}100%{transform:translateX(calc(100vw + 250px))}}
+@keyframes sunSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes iconPop{0%{transform:translateX(-50%) scale(0)}100%{transform:translateX(-50%) scale(1)}}
+@keyframes popIn{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes signGlow{0%,100%{box-shadow:0 4px 16px rgba(0,0,0,0.4)}50%{box-shadow:0 4px 16px rgba(0,0,0,0.4),0 0 24px rgba(255,215,0,0.6)}}
+@keyframes spongeWipe{0%{opacity:1;transform:translateX(-100%) rotate(-10deg)}50%{opacity:1;transform:translateX(50%) rotate(5deg)}100%{opacity:0;transform:translateX(200%) rotate(-5deg)}}
+@keyframes confettiFall{0%{top:-20px;opacity:1}100%{top:110vh;opacity:0;transform:rotate(720deg) translateX(60px)}}
+@keyframes celebBounce{0%{transform:scale(0)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+/* WELCOME */
+#welcome{background:linear-gradient(180deg,#2D0050,#6B0080 30%,#C26DFF 70%,#FFB6D9);justify-content:center;z-index:10;overflow-y:auto;}
+.welcome-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:14px 12px 18px;width:100%;}
+.kingdom-sign{background:linear-gradient(90deg,#8B4513,#D2691E,#8B4513);border:4px solid var(--gold);border-radius:16px;padding:10px 26px;color:var(--gold);font-size:clamp(16px,5vw,27px);text-shadow:2px 2px 4px rgba(0,0,0,0.5);box-shadow:0 4px 16px rgba(0,0,0,0.4);margin-bottom:13px;animation:signGlow 2s ease-in-out infinite;}
+.castle-wrap{position:relative;width:min(340px,88vw);animation:castleFloat 3s ease-in-out infinite;}
+.castle-wrap svg{width:100%;display:block;}
+.castle-princess{position:absolute;top:12%;left:50%;transform:translateX(-50%);width:min(110px,28vw);height:min(110px,28vw);border-radius:50%;border:5px solid var(--gold);box-shadow:0 0 28px rgba(255,215,0,0.8),0 0 0 4px rgba(255,255,255,0.5);object-fit:cover;pointer-events:none;animation:iconPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;}
+.welcome-msg{color:#fff;font-size:clamp(15px,4vw,22px);text-align:center;text-shadow:2px 2px 8px rgba(0,0,0,0.5);padding:0 20px;margin:12px 0 14px;}
+.enter-btn{background:linear-gradient(135deg,var(--gold),var(--amber));border:none;border-radius:50px;padding:15px 44px;font-family:'Fredoka One',cursive;font-size:clamp(19px,5vw,27px);color:#5C2D00;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.3);animation:pulseBtn 1.5s ease-in-out infinite;}
+/* MAIN ROOM */
+#mainRoom{z-index:5;overflow-y:auto;}
+.room-bg{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.room-bg-sky{position:absolute;top:0;left:0;right:0;height:35%;background:linear-gradient(180deg,#87CEEB,#C5E8FF);}
+.room-bg-wall{position:absolute;top:35%;left:0;right:0;height:22%;background:#FFE4F0;}
+.room-bg-wall-dots{position:absolute;top:35%;left:0;right:0;height:22%;background-image:radial-gradient(circle,rgba(255,182,217,0.3) 2px,transparent 2px);background-size:36px 36px;}
+.room-bg-floor{position:absolute;top:57%;left:0;right:0;bottom:0;background:linear-gradient(180deg,#D4A96A,#C09050);}
+.room-bg-floor-grid{position:absolute;top:57%;left:0;right:0;bottom:0;background-image:repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(255,255,255,0.07) 58px,rgba(255,255,255,0.07) 60px),repeating-linear-gradient(0deg,transparent,transparent 58px,rgba(255,255,255,0.07) 58px,rgba(255,255,255,0.07) 60px);}
+.cloud{position:absolute;background:rgba(255,255,255,0.95);border-radius:50px;pointer-events:none;animation:cloudFloat linear infinite;}
+.room-content{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;padding:10px 0 18px;}
+.room-sign{background:linear-gradient(90deg,#8B4513,#D2691E,#8B4513);border:3px solid var(--gold);border-radius:12px;padding:7px 18px;color:var(--gold);font-size:clamp(12px,3.5vw,20px);box-shadow:0 3px 10px rgba(0,0,0,0.35);white-space:nowrap;margin-bottom:10px;}
+.menu-cards{display:flex;flex-direction:column;align-items:stretch;gap:11px;width:100%;max-width:480px;padding:0 13px;}
+.menu-card{border-radius:24px;border:5px solid;box-shadow:0 8px 24px rgba(0,0,0,0.18);cursor:pointer;transition:transform 0.15s;display:flex;align-items:center;overflow:hidden;min-height:100px;}
+.menu-card:active{transform:scale(0.97);}
+.menu-card-tv{border-color:#4488FF;background:linear-gradient(135deg,#1a1a3e,#0a2060);}
+.menu-card-toys{border-color:#A0522D;background:linear-gradient(135deg,#7B3010,#C26020);}
+.menu-card-draw{border-color:var(--rose);background:linear-gradient(135deg,#FF3D9A,#FF6EB4);}
+.menu-card-album{border-color:var(--gold);background:linear-gradient(135deg,#8B4513,#D4AF37);}
+.card-icon{width:90px;min-width:90px;height:100px;display:flex;align-items:center;justify-content:center;font-size:56px;flex-shrink:0;}
+.card-text{flex:1;padding:12px 12px 12px 0;}
+.card-title{font-size:clamp(20px,5vw,30px);color:#fff;text-shadow:2px 2px 4px rgba(0,0,0,0.3);line-height:1.1;}
+.card-sub{font-family:'Nunito',sans-serif;font-weight:700;font-size:clamp(11px,2.8vw,14px);color:rgba(255,255,255,0.75);margin-top:3px;}
+.floor-decor{font-size:28px;display:flex;justify-content:space-around;padding:0 18px;width:100%;margin-top:8px;}
+.floor-character{width:min(240px,64vw);margin-top:4px;pointer-events:none;filter:drop-shadow(0 -4px 14px rgba(194,109,255,0.4));animation:charFloat 3s ease-in-out infinite;}
+/* TV */
+#tvScreen{background:linear-gradient(180deg,#0a0a20,#1a1a3e);overflow-y:auto;z-index:20;}
+.tv-title{color:var(--gold);font-size:clamp(22px,6vw,34px);text-shadow:0 0 20px rgba(255,215,0,0.5);text-align:center;padding:14px 0 10px;}
+.channels-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;padding:0 14px 60px;width:100%;max-width:620px;}
+.ch-card{background:rgba(255,255,255,0.08);border:3px solid rgba(255,255,255,0.15);border-radius:20px;padding:16px 10px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.ch-card:active{transform:scale(0.96);}
+.ch-emoji{font-size:48px;display:block;margin-bottom:7px;}
+.ch-name{color:#fff;font-size:clamp(14px,3.5vw,19px);}
+.ch-desc{color:rgba(255,255,255,0.55);font-size:12px;font-family:'Nunito',sans-serif;margin-top:3px;}
+#playerOverlay{display:none;position:fixed;inset:0;background:#000;z-index:99999;flex-direction:column;}
+#playerOverlay.open{display:flex;}
+#playerTopBar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(0,0,0,0.75);position:absolute;top:0;left:0;right:0;z-index:2;}
+#playerChannelName{color:#fff;font-size:clamp(15px,4vw,22px);flex:1;}
+#closePlayer{background:#FF4444;border:none;border-radius:50%;width:48px;height:48px;color:#fff;font-size:22px;cursor:pointer;font-family:'Fredoka One',cursive;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#playerVideo{width:100%;height:100%;background:#000;object-fit:contain;}
+#playerError{display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;text-align:center;padding:30px;}
+/* TOYS */
+#toysScreen{background:linear-gradient(135deg,#4a2070,#8B3DBF,#C26DFF);overflow-y:auto;z-index:20;}
+.toys-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;padding:12px 14px 60px;max-width:540px;width:100%;margin:0 auto;}
+.toy-btn{background:rgba(255,255,255,0.15);border:4px solid rgba(255,255,255,0.35);border-radius:22px;padding:18px 10px;text-align:center;cursor:pointer;transition:all 0.2s;color:#fff;}
+.toy-btn:active{transform:scale(0.96);}
+.toy-emoji{font-size:46px;display:block;margin-bottom:7px;}
+.toy-name{font-size:clamp(15px,4vw,20px);}
+.toy-sub{font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);margin-top:3px;}
+/* SECTION */
+.section-screen{background:linear-gradient(135deg,#FFE4F0,#F0E4FF 50%,#E4F0FF);padding:0;justify-content:flex-start;overflow-y:auto;z-index:20;}
+.section-inner{padding:12px 12px 18px;width:100%;display:flex;flex-direction:column;align-items:center;}
+.section-title{color:var(--purple);font-size:clamp(20px,5.5vw,32px);text-align:center;margin-bottom:8px;width:100%;}
+.section-instruct{background:rgba(194,109,255,0.12);border:2px solid rgba(194,109,255,0.3);border-radius:14px;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:clamp(13px,3vw,16px);color:#7B3DBF;text-align:center;margin-bottom:12px;width:100%;max-width:480px;line-height:1.4;}
+.action-btn{background:linear-gradient(135deg,var(--purple),var(--rose));border:none;border-radius:50px;padding:10px 20px;font-family:'Fredoka One',cursive;font-size:15px;color:#fff;cursor:pointer;margin:4px;transition:transform 0.15s;}
+.action-btn:active{transform:scale(0.95);}
+/* DRAWING */
+#drawScreen{z-index:20;background:linear-gradient(135deg,#FFE4F0,#F0E4FF);overflow-y:auto;padding:0;}
+#drawCanvas{border:6px solid var(--pink);border-radius:18px;box-shadow:0 8px 24px rgba(255,110,180,0.4);background:#fff;cursor:crosshair;touch-action:none;display:block;max-width:100%;}
+.draw-tools{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:7px;}
+.color-btn{width:38px;height:38px;border-radius:50%;border:4px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.25);cursor:pointer;transition:transform 0.15s;}
+.color-btn:active,.color-btn.active{transform:scale(1.3);border-color:#333;}
+.tool-btn{background:linear-gradient(135deg,var(--lavender),var(--purple));border:none;border-radius:50px;padding:7px 13px;font-family:'Fredoka One',cursive;font-size:14px;color:#fff;cursor:pointer;}
+.tool-btn:active{transform:scale(0.95);}
+.clear-btn{background:linear-gradient(135deg,var(--coral),#FF4444);border:none;border-radius:50px;padding:9px 20px;font-family:'Fredoka One',cursive;font-size:16px;color:#fff;cursor:pointer;}
+.sticker-btn{font-size:26px;cursor:pointer;background:rgba(255,255,255,0.7);border-radius:10px;padding:3px 5px;border:3px solid var(--lavender);}
+.sticker-btn:active{transform:scale(1.25);}
+.sponge-anim{position:fixed;font-size:60px;top:50%;left:-80px;animation:spongeWipe 0.8s ease-in-out forwards;pointer-events:none;z-index:9999;}
+/* PUZZLE */
+.puzzle-grid{display:grid;gap:6px;margin:0 auto;}
+.puzzle-piece{border:4px solid #fff;border-radius:12px;cursor:grab;box-shadow:0 4px 12px rgba(0,0,0,0.2);background:white;display:flex;align-items:center;justify-content:center;transition:transform 0.15s;font-size:3em;}
+.puzzle-piece:hover{transform:scale(1.08);}
+.puzzle-piece.dragging{opacity:0.5;transform:scale(1.1);}
+.puzzle-slot{border:5px dashed #C26DFF;border-radius:14px;background:rgba(194,109,255,0.18);display:flex;align-items:center;justify-content:center;transition:all 0.2s;position:relative;box-shadow:0 0 0 2px rgba(255,255,255,0.3) inset;}
+.puzzle-slot.over{background:rgba(194,109,255,0.4);border-color:#fff;transform:scale(1.06);box-shadow:0 0 16px rgba(194,109,255,0.6);}
+.puzzle-slot.filled{border:4px solid var(--purple);background:white;box-shadow:0 0 12px rgba(194,109,255,0.5);}
+.puzzle-slot-label{position:absolute;bottom:4px;right:6px;font-size:11px;color:rgba(194,109,255,0.6);font-family:'Nunito',sans-serif;}
+.puzzle-container{display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap;padding:0 8px;}
+.puzzle-pieces-pool{display:grid;gap:8px;}
+/* SHAPES */
+.shapes-game{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%;max-width:700px;padding:0 8px;}
+.drop-zone{min-width:110px;min-height:110px;border:5px dashed;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px;gap:4px;transition:all 0.2s;background:rgba(255,255,255,0.3);}
+.drop-zone.over{background:rgba(255,255,255,0.65);transform:scale(1.04);}
+.drop-zone-label{font-size:clamp(11px,3vw,14px);margin-bottom:3px;font-family:'Fredoka One',cursive;}
+.drag-item{font-size:clamp(30px,7.5vw,48px);cursor:grab;transition:transform 0.15s;display:inline-block;filter:drop-shadow(2px 2px 4px rgba(0,0,0,0.2));}
+.drag-item:active{transform:scale(1.25);}
+.drag-items-pool{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;background:rgba(255,255,255,0.55);border-radius:20px;padding:16px;border:4px solid rgba(194,109,255,0.35);box-shadow:0 4px 16px rgba(194,109,255,0.15);}
+/* MEMORY */
+.memory-grid{display:grid;gap:10px;margin:0 auto;}
+.mem-card{perspective:600px;cursor:pointer;}
+.mem-card-inner{width:100%;height:100%;position:relative;-webkit-transform-style:preserve-3d;transform-style:preserve-3d;transition:-webkit-transform 0.5s,transform 0.5s;border-radius:16px;}
+.mem-card.flipped .mem-card-inner{-webkit-transform:rotateY(180deg);transform:rotateY(180deg);}
+.mem-card-front,.mem-card-back{position:absolute;inset:0;border-radius:16px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.2);border:4px solid #fff;}
+.mem-card-front{background:linear-gradient(135deg,#FF6EB4,#C26DFF);z-index:2;}
+.mem-card-back{background:linear-gradient(135deg,#fff,#F0E4FF);-webkit-transform:rotateY(180deg);transform:rotateY(180deg);}
+.mem-card.matched .mem-card-inner{transform:rotateY(180deg);animation:matchPop 0.4s ease;}
+@keyframes matchPop{0%{transform:rotateY(180deg) scale(0.8)}60%{transform:rotateY(180deg) scale(1.2)}100%{transform:rotateY(180deg) scale(1)}}
+/* BUTTERFLY */
+#butterflyScreen{z-index:20;overflow:hidden;}
+#gardenBg{position:absolute;inset:0;z-index:0;overflow:hidden;background:linear-gradient(180deg,#87CEEB 0%,#B0E8FF 44%,#5DBB63 44.1%,#2D7A1F 100%);}
+#butterfliesLayer{position:absolute;inset:0;top:54px;z-index:5;}
+#bfParticles{position:absolute;inset:0;z-index:8;pointer-events:none;}
+.bf-sun{position:absolute;top:12px;right:18px;font-size:46px;pointer-events:none;animation:sunSpin 12s linear infinite;}
+.butterfly{position:absolute;cursor:pointer;font-size:44px;padding:8px;z-index:6;line-height:1;will-change:transform;}
+.butterfly.caught{pointer-events:none;animation:bfCatch 0.4s ease forwards;}
+@keyframes bfCatch{0%{transform:scale(1)}50%{transform:scale(1.6) rotate(20deg)}100%{transform:scale(0) rotate(-20deg);opacity:0;}}
+.bf-resting{position:absolute;font-size:30px;pointer-events:none;animation:bfLand 0.5s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes bfLand{0%{transform:scale(0) translateY(-20px)}100%{transform:scale(1) translateY(0)}}
+.star-particle{position:absolute;pointer-events:none;font-size:18px;animation:starBurst 0.8s ease forwards;z-index:9;}
+@keyframes starBurst{0%{transform:translate(0,0) scale(0.5);opacity:1;}100%{transform:translate(var(--dx),var(--dy)) scale(1.2);opacity:0;}}
+#bfIntro,#bfEnd{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(0,80,0,0.3);}
+#bfEnd{display:none;}
+.bf-card{background:rgba(255,255,255,0.95);border:5px solid #C26DFF;border-radius:26px;padding:26px 22px;text-align:center;max-width:290px;box-shadow:0 8px 28px rgba(0,0,0,0.22);}
+.bf-card-title{font-size:clamp(19px,5vw,26px);color:#C26DFF;margin-bottom:7px;}
+.bf-card-sub{font-family:'Nunito',sans-serif;font-size:14px;color:#555;margin-bottom:18px;line-height:1.5;}
+.bf-play-btn{background:linear-gradient(135deg,#C26DFF,#FF6EB4);border:none;border-radius:50px;padding:13px 32px;font-family:'Fredoka One',cursive;font-size:19px;color:#fff;cursor:pointer;transition:transform 0.15s;margin:4px;}
+.bf-play-btn:active{transform:scale(0.96);}
+#bfTimerWrap{position:absolute;bottom:0;left:0;right:0;height:10px;background:rgba(0,0,0,0.2);z-index:10;}
+#bfTimerBar{height:100%;width:100%;background:linear-gradient(90deg,#FFD700,#FF6EB4);border-radius:0 5px 5px 0;transition:width 0.2s linear;}
+/* SHADOW GAME */
+#shadowScreen{z-index:20;overflow-y:auto;background:linear-gradient(180deg,#1a0535,#3D1A6B,#6B2FBF);}
+.shadow-board{display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 12px 30px;width:100%;max-width:480px;}
+.shadow-row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;}
+.shadow-slot{width:clamp(80px,22vw,110px);height:clamp(80px,22vw,110px);border:4px dashed rgba(255,255,255,0.5);border-radius:16px;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;font-size:clamp(46px,12vw,66px);filter:brightness(0.15) saturate(0);transition:all 0.2s;position:relative;}
+.shadow-slot.over{border-color:var(--gold);background:rgba(255,215,0,0.15);filter:brightness(0.25) saturate(0);}
+.shadow-slot.filled{filter:none;border:4px solid var(--gold);background:rgba(255,255,255,0.15);box-shadow:0 0 16px rgba(255,215,0,0.5);}
+.shadow-item{width:clamp(80px,22vw,110px);height:clamp(80px,22vw,110px);border:4px solid rgba(255,255,255,0.5);border-radius:16px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:clamp(46px,12vw,66px);cursor:grab;transition:transform 0.15s;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+.shadow-item:hover{transform:scale(1.08);}
+.shadow-item.dragging{opacity:0.5;transform:scale(1.1);}
+.shadow-label{position:absolute;bottom:3px;font-size:10px;color:rgba(255,255,255,0.5);font-family:'Nunito',sans-serif;}
+/* JEWEL GAME */
+#jewelScreen{z-index:20;overflow:hidden;background:radial-gradient(ellipse at top,#1a0535 0%,#3D1A6B 50%,#6B2FBF 100%);}
+.jewel-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex:1;touch-action:none;}
+#jewelCanvas{border-radius:20px;cursor:crosshair;touch-action:none;}
+.jewel-instruct{color:#fff;font-size:clamp(16px,4vw,22px);text-align:center;padding:6px 20px;text-shadow:1px 1px 4px rgba(0,0,0,0.5);}
+#jewelProgressBar{width:80%;max-width:320px;height:18px;background:rgba(255,255,255,0.2);border-radius:50px;margin:6px auto;overflow:hidden;}
+#jewelProgress{height:100%;width:0%;background:linear-gradient(90deg,#FFD700,#FF69B4,#C26DFF);border-radius:50px;transition:width 0.1s linear;}
+#jewelComplete{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:10;flex-direction:column;gap:14px;}
+.jewel-shine{font-size:80px;animation:shineAnim 0.6s ease-in-out infinite alternate;}
+@keyframes shineAnim{0%{transform:scale(1)}100%{transform:scale(1.15) rotate(5deg)}}
+/* STICKER ALBUM */
+#albumScreen{z-index:20;overflow:hidden;}
+#albumCanvas{position:absolute;inset:0;width:100%;height:100%;}
+.album-sticker-tray{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.92);border-top:4px solid var(--gold);display:flex;gap:8px;padding:8px 10px;overflow-x:auto;z-index:20;-webkit-overflow-scrolling:touch;}
+.album-sticker{font-size:38px;cursor:pointer;transition:transform 0.15s;flex-shrink:0;padding:4px;border-radius:10px;border:3px solid transparent;}
+.album-sticker:active{transform:scale(1.3);}
+.album-sticker.selected{border-color:var(--gold);background:rgba(255,215,0,0.2);}
+.album-placed{position:absolute;font-size:40px;cursor:move;touch-action:none;z-index:15;line-height:1;user-select:none;-webkit-user-select:none;animation:popIn 0.3s ease;}
+.album-clear-btn{background:linear-gradient(135deg,var(--coral),#FF4444);border:none;border-radius:50px;padding:8px 18px;font-family:'Fredoka One',cursive;font-size:16px;color:#fff;cursor:pointer;position:absolute;top:62px;right:10px;z-index:25;box-shadow:0 3px 10px rgba(0,0,0,0.25);}
+/* CELEBRATION */
+.celebration{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:99990;}
+.celebration.show{display:flex;}
+.celebration-content{background:linear-gradient(135deg,#FFE4F0,#F0E4FF);border:6px solid var(--gold);border-radius:28px;padding:32px;text-align:center;animation:celebBounce 0.5s ease;}
+.celebration-emoji{font-size:68px;animation:spin 1s linear;}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.celebration-title{font-size:clamp(22px,6vw,32px);color:var(--purple);margin:10px 0;}
+.celebration-btn{background:linear-gradient(135deg,var(--gold),var(--amber));border:none;border-radius:50px;padding:13px 34px;font-family:'Fredoka One',cursive;font-size:clamp(16px,4vw,21px);color:#5C2D00;cursor:pointer;margin-top:12px;}
+.confetti-piece{position:fixed;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:99995;}
+/* Sticker badge */
+.sticker-earned{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;z-index:99998;pointer-events:none;animation:stickerEarn 1.2s ease forwards;}
+@keyframes stickerEarn{0%{transform:translate(-50%,-50%) scale(0);opacity:1}50%{transform:translate(-50%,-60%) scale(1.4);opacity:1}100%{transform:translate(-50%,-80%) scale(0.8);opacity:0}}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<button id="installBtn" onclick="installPWA()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z"/><path d="M4 20h16"/></svg>Instalar
+</button>
+
+<!-- ====== WELCOME ====== -->
+<div class="screen active" id="welcome">
+  <div class="welcome-inner">
+    <div class="kingdom-sign">👑 El Reino de Valentina 👑</div>
+    <div class="castle-wrap">
+      <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#DDA0DD"/><stop offset="100%" stop-color="#9370DB"/></linearGradient>
+          <linearGradient id="tG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EE82EE"/><stop offset="100%" stop-color="#8B008B"/></linearGradient>
+          <radialGradient id="mG"><stop offset="0%" stop-color="#FFFFEE"/><stop offset="100%" stop-color="#FFD700"/></radialGradient>
+        </defs>
+        <circle cx="340" cy="38" r="28" fill="url(#mG)" opacity="0.9"/>
+        <text x="55" y="48" font-size="15" fill="white" opacity="0.8">✦</text><text x="115" y="28" font-size="11" fill="white" opacity="0.6">✦</text><text x="18" y="78" font-size="10" fill="white" opacity="0.5">✦</text><text x="275" y="18" font-size="13" fill="white" opacity="0.7">✦</text>
+        <rect x="0" y="245" width="400" height="35" fill="#2D5016" rx="4"/>
+        <rect x="80" y="155" width="240" height="100" fill="url(#cG)" rx="4"/>
+        <rect x="80" y="143" width="28" height="18" fill="url(#cG)" rx="2"/><rect x="118" y="143" width="28" height="18" fill="url(#cG)" rx="2"/><rect x="156" y="143" width="28" height="18" fill="url(#cG)" rx="2"/><rect x="194" y="143" width="28" height="18" fill="url(#cG)" rx="2"/><rect x="232" y="143" width="28" height="18" fill="url(#cG)" rx="2"/><rect x="270" y="143" width="28" height="18" fill="url(#cG)" rx="2"/>
+        <rect x="50" y="95" width="68" height="160" fill="url(#tG)" rx="4"/><rect x="40" y="83" width="20" height="17" fill="url(#tG)" rx="2"/><rect x="64" y="83" width="20" height="17" fill="url(#tG)" rx="2"/><rect x="88" y="83" width="20" height="17" fill="url(#tG)" rx="2"/>
+        <polygon points="84,8 48,90 120,90" fill="#FF1493"/><text x="84" y="18" text-anchor="middle" font-size="16">🚩</text>
+        <rect x="282" y="95" width="68" height="160" fill="url(#tG)" rx="4"/><rect x="272" y="83" width="20" height="17" fill="url(#tG)" rx="2"/><rect x="296" y="83" width="20" height="17" fill="url(#tG)" rx="2"/><rect x="320" y="83" width="20" height="17" fill="url(#tG)" rx="2"/>
+        <polygon points="316,8 282,90 350,90" fill="#FF1493"/><text x="316" y="18" text-anchor="middle" font-size="16">🚩</text>
+        <rect x="103" y="170" width="38" height="48" fill="#87CEEB" rx="19 19 0 0"/><rect x="178" y="170" width="38" height="48" fill="#87CEEB" rx="19 19 0 0"/><rect x="253" y="170" width="38" height="48" fill="#87CEEB" rx="19 19 0 0"/>
+        <rect x="165" y="205" width="68" height="52" fill="#8B4513" rx="34 34 0 0"/><rect x="178" y="220" width="18" height="36" fill="#D2691E" rx="9 9 0 0"/><rect x="202" y="220" width="18" height="36" fill="#D2691E" rx="9 9 0 0"/><circle cx="199" cy="238" r="4" fill="#FFD700"/>
+        <text x="128" y="262" font-size="18">🌸</text><text x="238" y="262" font-size="18">🌸</text><text x="28" y="250" font-size="18">🌺</text><text x="342" y="250" font-size="18">🌺</text>
+      </svg>
+      <img class="castle-princess" src="https://raw.githubusercontent.com/socramtv/Valentina_app/refs/heads/main/icon-512.png" alt="Valentina" onerror="this.style.display='none'">
+    </div>
+    <div class="welcome-msg">✨ ¡Hola, Princesa Valentina! ✨<br>Bienvenida a tu castillo mágico 🏰</div>
+    <button class="enter-btn" onclick="enterKingdom()">¡Entrar al Reino! 👑</button>
+  </div>
+</div>
+
+<!-- ====== MAIN ROOM ====== -->
+<div class="screen" id="mainRoom" style="overflow-y:auto;">
+  <div class="room-bg">
+    <div class="room-bg-sky"></div><div class="room-bg-wall"></div><div class="room-bg-wall-dots"></div><div class="room-bg-floor"></div><div class="room-bg-floor-grid"></div>
+    <div class="cloud" style="width:88px;height:30px;top:9%;animation-duration:20s;"><div style="position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.95);top:-24px;left:13px;"></div><div style="position:absolute;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.95);top:-17px;left:38px;"></div></div>
+    <div class="cloud" style="width:62px;height:22px;top:20%;animation-duration:28s;animation-delay:9s;opacity:0.85;"><div style="position:absolute;width:33px;height:33px;border-radius:50%;background:rgba(255,255,255,0.95);top:-15px;left:10px;"></div></div>
+  </div>
+  <div class="room-content">
+    <div class="room-sign">👑 El Reino de Valentina 👑</div>
+    <div class="menu-cards">
+      <div class="menu-card menu-card-tv" onclick="showScreen('tvScreen')"><div class="card-icon">📺</div><div class="card-text"><div class="card-title">Televisión</div><div class="card-sub">Tus canales favoritos 🎬</div></div></div>
+      <div class="menu-card menu-card-toys" onclick="showScreen('toysScreen')"><div class="card-icon">🧸</div><div class="card-text"><div class="card-title">Baúl de Juguetes</div><div class="card-sub">Puzzles · Formas · Memoria 🎮</div></div></div>
+      <div class="menu-card menu-card-draw" onclick="showScreen('drawScreen')"><div class="card-icon">🎨</div><div class="card-text"><div class="card-title">Pizarra Mágica</div><div class="card-sub">Pinta y decora ✨</div></div></div>
+      <div class="menu-card menu-card-album" onclick="showScreen('albumScreen');initAlbum()"><div class="card-icon">⭐</div><div class="card-text"><div class="card-title">Álbum Real</div><div class="card-sub">Tus pegatinas mágicas 👑</div></div></div>
+    </div>
+    <div class="floor-decor"><span>🌸</span><span>⭐</span><span>🌺</span><span>⭐</span><span>🌸</span></div>
+    <img class="floor-character" src="https://raw.githubusercontent.com/socramtv/Valentina_app/refs/heads/main/valentina%201~2.png" alt="Princesa Valentina" onerror="this.style.display='none'">
+  </div>
+</div>
+
+<!-- ====== TV ====== -->
+<div class="screen" id="tvScreen" style="background:linear-gradient(180deg,#0a0a20,#1a1a3e);overflow-y:auto;z-index:20;">
+  <div class="back-bar" style="background:rgba(0,0,0,0.45);"><button class="back-btn back-btn-dark" onclick="goBack('mainRoom')">⬅ Volver</button><div class="back-bar-title">📺 Canales</div></div>
+  <div class="tv-title">📺 Canales de Valentina</div>
+  <div class="channels-grid">
+    <div class="ch-card" onclick="playChannel('Clan TV','https://rtvelivestream.rtve.es/rtvesec/clan/clan_main_dvr.m3u8?idasset=5466990')"><span class="ch-emoji">🏰</span><div class="ch-name">Clan TV</div><div class="ch-desc">Canal infantil RTVE</div></div>
+    <div class="ch-card" onclick="playChannel('Peque TV','https://canadaremar2.todostreaming.es/live/peque-pequetv.m3u8')"><span class="ch-emoji">🐣</span><div class="ch-name">Peque TV</div><div class="ch-desc">¡Para los más pequeños!</div></div>
+    <div class="ch-card" onclick="playChannel('Pocoyó','https://daiconnect.com/live/hls/tvup/tvfy-pocoyo/.m3u8')"><span class="ch-emoji">👶</span><div class="ch-name">Pocoyó</div><div class="ch-desc">Aprende y ríe</div></div>
+  </div>
+</div>
+<div id="playerOverlay">
+  <div id="playerTopBar"><span id="playerChannelName">Canal</span><button id="closePlayer" onclick="closePlayer()">✕</button></div>
+  <video id="playerVideo" controls autoplay playsinline></video>
+  <div id="playerError"><div style="font-size:60px;">📡</div><div class="err-msg" id="errMsg">No se pudo cargar</div><div style="font-family:'Nunito',sans-serif;font-size:14px;color:rgba(255,255,255,0.6);">Comprueba tu conexión</div><button class="enter-btn" style="font-size:17px;padding:11px 26px;margin-top:12px;" onclick="closePlayer()">⬅ Volver</button></div>
+</div>
+
+<!-- ====== TOYS ====== -->
+<div class="screen" id="toysScreen" style="background:linear-gradient(135deg,#4a2070,#8B3DBF,#C26DFF);overflow-y:auto;z-index:20;">
+  <div class="back-bar" style="background:rgba(74,32,112,0.6);"><button class="back-btn back-btn-dark" onclick="goBack('mainRoom')">⬅ Volver</button><div class="back-bar-title">🎮 Juguetes</div></div>
+  <div style="color:#fff;font-size:clamp(20px,5vw,28px);text-align:center;padding:12px 0 4px;text-shadow:2px 2px 4px rgba(0,0,0,0.3);">🎮 Baúl de Juguetes</div>
+  <div class="toys-grid">
+    <div class="toy-btn" onclick="showScreen('puzzleScreen');initPuzzle(4)"><span class="toy-emoji">🧩</span><div class="toy-name">Rompecabezas</div><div class="toy-sub">Arrastra las piezas</div></div>
+    <div class="toy-btn" onclick="showScreen('shapesScreen');initShapes()"><span class="toy-emoji">🔴</span><div class="toy-name">Formas y Colores</div><div class="toy-sub">Clasifica objetos</div></div>
+    <div class="toy-btn" onclick="showScreen('memoryScreen');initMemory(6)"><span class="toy-emoji">🃏</span><div class="toy-name">Encuentra la Pareja</div><div class="toy-sub">Voltea las cartas</div></div>
+    <div class="toy-btn" onclick="showScreen('butterflyScreen');initButterflies()"><span class="toy-emoji">🦋</span><div class="toy-name">Jardín Mágico</div><div class="toy-sub">¡Atrapa mariposas!</div></div>
+    <div class="toy-btn" onclick="showScreen('shadowScreen');initShadow()"><span class="toy-emoji">🌑</span><div class="toy-name">Sombras del Castillo</div><div class="toy-sub">Encaja las siluetas</div></div>
+    <div class="toy-btn" onclick="showScreen('jewelScreen');setTimeout(initJewel,50)"><span class="toy-emoji">💎</span><div class="toy-name">¡A Limpiar la Joya!</div><div class="toy-sub">Frota y hazla brillar</div></div>
+  </div>
+</div>
+
+<!-- ====== DRAWING ====== -->
+<div class="screen" id="drawScreen" style="z-index:20;background:linear-gradient(135deg,#FFE4F0,#F0E4FF);overflow-y:auto;padding:0;">
+  <div class="back-bar" style="background:rgba(255,110,180,0.35);"><button class="back-btn" style="background:rgba(255,61,154,0.4);border-color:rgba(255,255,255,0.7);" onclick="goBack('mainRoom')">⬅ Volver</button><div class="back-bar-title" style="color:var(--purple);">🎨 Pizarra</div></div>
+  <div style="padding:8px;display:flex;flex-direction:column;align-items:center;">
+    <div class="draw-tools"><div id="colorPalette"></div></div>
+    <div class="draw-tools" style="margin:4px 0;">
+      <button class="tool-btn" onclick="setBrush(8)">🖌 Fino</button>
+      <button class="tool-btn" onclick="setBrush(20)">🖌 Grueso</button>
+      <button class="tool-btn" onclick="setBrush(40)">🖌 Gigante</button>
+      <button class="tool-btn" onclick="setEraser()">⬜ Borrar</button>
+      <button class="clear-btn" onclick="clearCanvas()">🧽 Limpiar</button>
+    </div>
+    <div class="draw-tools" style="margin-bottom:6px;" id="stickersRow"></div>
+    <canvas id="drawCanvas"></canvas>
+  </div>
+</div>
+
+<!-- ====== PUZZLE ====== -->
+<div class="screen section-screen" id="puzzleScreen">
+  <div class="back-bar" style="background:rgba(194,109,255,0.3);"><button class="back-btn" style="background:rgba(194,109,255,0.4);border-color:rgba(255,255,255,0.7);" onclick="goBack('toysScreen')">⬅ Volver</button><div class="back-bar-title">🧩 Rompecabezas</div></div>
+  <div class="section-inner">
+    <div class="section-title">🧩 Rompecabezas</div>
+    <div class="section-instruct">🖐️ Arrastra cada pieza a su sitio en el tablero. ¡Busca el hueco que le corresponde y suéltala!</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="action-btn" onclick="initPuzzle(2)">🐣 Fácil — 2 piezas</button>
+      <button class="action-btn" onclick="initPuzzle(4)">⭐ Medio — 4 piezas</button>
+    </div>
+    <div id="puzzleArea"></div>
+  </div>
+</div>
+
+<!-- ====== SHAPES ====== -->
+<div class="screen section-screen" id="shapesScreen">
+  <div class="back-bar" style="background:rgba(194,109,255,0.3);"><button class="back-btn" style="background:rgba(194,109,255,0.4);border-color:rgba(255,255,255,0.7);" onclick="goBack('toysScreen')">⬅ Volver</button><div class="back-bar-title">🔴🟡🔵 Colores</div></div>
+  <div class="section-inner">
+    <div class="section-title">🔴🟡🔵 Formas y Colores</div>
+    <div class="section-instruct">🖐️ Arrastra cada cosa a la caja del mismo color. ¡Las rojas van con los rojos, las amarillas con los amarillos!</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">
+      <button class="action-btn" onclick="initShapes('easy')">🐣 2 colores</button>
+      <button class="action-btn" onclick="initShapes('hard')">🌟 3 colores</button>
+    </div>
+    <div id="shapesGame"></div>
+  </div>
+</div>
+
+<!-- ====== MEMORY ====== -->
+<div class="screen section-screen" id="memoryScreen">
+  <div class="back-bar" style="background:rgba(194,109,255,0.3);"><button class="back-btn" style="background:rgba(194,109,255,0.4);border-color:rgba(255,255,255,0.7);" onclick="goBack('toysScreen')">⬅ Volver</button><div class="back-bar-title">🃏 Memoria</div></div>
+  <div class="section-inner">
+    <div class="section-title">🃏 Encuentra la Pareja</div>
+    <div class="section-instruct">🖐️ Toca una carta para verla, luego toca otra. Si son iguales, ¡has encontrado una pareja! 🎉</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="action-btn" onclick="initMemory(4)">🐣 4 cartas</button>
+      <button class="action-btn" onclick="initMemory(6)">⭐ 6 cartas</button>
+    </div>
+    <div id="memoryGrid" class="memory-grid"></div>
+  </div>
+</div>
+
+<!-- ====== BUTTERFLY ====== -->
+<div class="screen" id="butterflyScreen" style="z-index:20;overflow:hidden;">
+  <div id="gardenBg">
+    <div class="bf-sun">☀️</div>
+    <div class="cloud" style="width:80px;height:26px;top:8%;animation-duration:18s;"><div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.92);top:-22px;left:12px;"></div><div style="position:absolute;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.92);top:-14px;left:34px;"></div></div>
+    <div id="gardenFlowersBg" style="position:absolute;bottom:0;left:0;right:0;height:56%;pointer-events:none;font-size:26px;overflow:hidden;"></div>
+  </div>
+  <div class="back-bar" style="position:relative;z-index:15;background:rgba(0,100,0,0.5);"><button class="back-btn back-btn-dark" onclick="stopButterflies();goBack('toysScreen')">⬅ Volver</button><div class="back-bar-title">🌸 Jardín Mágico</div><div id="bfScore" style="color:#FFD700;font-size:clamp(17px,4vw,24px);font-family:'Fredoka One',cursive;padding-right:6px;">⭐ 0</div></div>
+  <div id="butterfliesLayer"></div>
+  <div id="bfParticles"></div>
+  <div id="bfTimerWrap"><div id="bfTimerBar"></div></div>
+  <div id="bfIntro"><div class="bf-card"><div style="font-size:60px;margin-bottom:8px;">🦋</div><div class="bf-card-title">🌸 Jardín de Mariposas</div><div class="bf-card-sub">Toca las mariposas que vuelan<br>y se posarán en su flor 🌺<br><br>Tienes <strong>40 segundos</strong> ⏱️</div><button class="bf-play-btn" onclick="startButterflyGame()">¡Jugar! 🦋</button></div></div>
+  <div id="bfEnd"><div class="bf-card"><div style="font-size:60px;margin-bottom:8px;">🏆</div><div class="bf-card-title">¡Tiempo!</div><div id="bfEndMsg" class="bf-card-sub"></div><button class="bf-play-btn" onclick="startButterflyGame()">¡Otra vez! 🦋</button><button class="bf-play-btn" style="background:linear-gradient(135deg,#4a2070,#8B3DBF);margin-top:8px;" onclick="stopButterflies();goBack('toysScreen')">Salir 🏠</button></div></div>
+</div>
+
+<!-- ====== SHADOW GAME ====== -->
+<div class="screen" id="shadowScreen" style="z-index:20;overflow-y:auto;">
+  <div class="back-bar" style="background:rgba(26,5,53,0.7);"><button class="back-btn back-btn-dark" onclick="goBack('toysScreen')">⬅ Volver</button><div class="back-bar-title">🌑 Sombras del Castillo</div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;padding:10px 12px 30px;width:100%;overflow-y:auto;">
+    <div style="color:#fff;font-size:clamp(18px,5vw,26px);text-align:center;margin-bottom:6px;">🌑 Sombras del Castillo</div>
+    <div style="background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.2);border-radius:14px;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:clamp(13px,3vw,15px);color:rgba(255,255,255,0.85);text-align:center;margin-bottom:14px;max-width:400px;line-height:1.4;">🖐️ Arrastra cada objeto brillante a su sombra correspondiente. ¡Fíjate en la forma!</div>
+    <div id="shadowBoard" class="shadow-board"></div>
+  </div>
+</div>
+
+<!-- ====== JEWEL GAME ====== -->
+<div class="screen" id="jewelScreen" style="z-index:20;overflow:hidden;">
+  <div class="back-bar" style="background:rgba(26,5,53,0.7);"><button class="back-btn back-btn-dark" onclick="goBack('toysScreen')">⬅ Volver</button><div class="back-bar-title">💎 ¡A Limpiar la Joya!</div></div>
+  <div class="jewel-instruct">👆 ¡Frota la joya con el dedo para limpiarla!</div>
+  <div id="jewelProgressBar"><div id="jewelProgress"></div></div>
+  <div class="jewel-wrap">
+    <canvas id="jewelCanvas"></canvas>
+    <div id="jewelComplete" style="border-radius:20px;">
+      <div class="jewel-shine" id="jewelShineEmoji">💎</div>
+      <div style="color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(22px,5vw,30px);text-align:center;text-shadow:2px 2px 8px rgba(0,0,0,0.5);">¡Brilla como una princesa! ✨</div>
+      <button class="bf-play-btn" onclick="initJewel()" style="margin-top:14px;">¡Otra joya! 💎</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== STICKER ALBUM ====== -->
+<div class="screen" id="albumScreen" style="z-index:20;overflow:hidden;">
+  <div class="back-bar" style="background:rgba(139,69,19,0.6);"><button class="back-btn back-btn-dark" onclick="goBack('mainRoom')">⬅ Volver</button><div class="back-bar-title">⭐ Álbum Real de Valentina</div></div>
+  <div style="position:relative;flex:1;width:100%;overflow:hidden;">
+    <canvas id="albumCanvas"></canvas>
+    <div id="albumStickersPlaced"></div>
+    <button class="album-clear-btn" onclick="clearAlbum()">🗑️ Limpiar</button>
+  </div>
+  <div class="album-sticker-tray" id="stickerTray"></div>
+</div>
+
+<!-- CELEBRATION -->
+<div class="celebration" id="celebration">
+  <div class="celebration-content">
+    <div class="celebration-emoji">🌟</div>
+    <div class="celebration-title">¡Muy Bien, Valentina! 🎉</div>
+    <div style="color:#888;font-family:'Nunito',sans-serif;font-size:15px;">¡Eres una princesa superlista! 👑</div>
+    <button class="celebration-btn" onclick="hideCelebration()">¡Seguir jugando! 🎮</button>
+  </div>
+</div>
+
+<script>
+// ===== PWA =====
+(function(){const m={name:"El Reino de Valentina",short_name:"Valentina 👑",start_url:"./",display:"standalone",orientation:"portrait",background_color:"#FFE4F0",theme_color:"#C26DFF",icons:[{src:"https://raw.githubusercontent.com/socramtv/Valentina_app/refs/heads/main/icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]};document.getElementById('pwaManifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));})();
+if('serviceWorker' in navigator){const sw=`const C='val-v2';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>new Response('Offline')));});`;navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'}))).catch(()=>{});}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBtn').classList.add('show');});
+window.addEventListener('appinstalled',()=>{document.getElementById('installBtn').classList.remove('show');deferredPrompt=null;});
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('installBtn').classList.remove('show');});}}
+
+// ===== STARS =====
+(()=>{const c=document.getElementById('stars');for(let i=0;i<35;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*5+2;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-duration:${Math.random()*3+2}s;animation-delay:${Math.random()*4}s;`;c.appendChild(s);}})();
+
+// ===== NAV =====
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goBack(dest){showScreen(dest);}
+function enterKingdom(){speak('¡Hola, Princesa Valentina! Bienvenida a tu castillo mágico');showScreen('mainRoom');}
+
+// ===== SPEECH =====
+function speak(t){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='es-ES';u.rate=0.85;u.pitch=1.3;window.speechSynthesis.speak(u);}
+
+// ===== AUDIO =====
+function playNote(freq,dur=0.5,type='sine'){try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator();const g=ctx.createGain();osc.connect(g);g.connect(ctx.destination);osc.type=type;osc.frequency.value=freq;g.gain.setValueAtTime(0.4,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.start();osc.stop(ctx.currentTime+dur);}catch(e){}}
+function playFanfare(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playNote(f,0.3),i*150));}
+function playSuccess(){[659,784,988].forEach((f,i)=>setTimeout(()=>playNote(f,0.25),i*120));}
+
+// ===== STICKERS ENGINE =====
+const ALL_STICKERS=['⭐','🌟','👑','💎','🌸','🌺','🌻','🦋','🦄','🐱','🌈','❤️','🎀','🏆','🎪','🍭','🎠','✨','💫','🌙','🔮','🎶','🌷','🍀'];
+let earnedStickers=JSON.parse(localStorage.getItem('val_stickers')||'[]');
+function earnSticker(emoji){
+  if(!emoji) emoji=ALL_STICKERS[Math.floor(Math.random()*8)];
+  earnedStickers.push(emoji);
+  localStorage.setItem('val_stickers',JSON.stringify(earnedStickers));
+  const el=document.createElement('div');el.className='sticker-earned';el.textContent=emoji;document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1300);
+  speak('¡Ganaste una pegatina!');
+}
+
+// ===== HLS PLAYER =====
+let hlsInstance=null;
+function playChannel(name,url){
+  const overlay=document.getElementById('playerOverlay'),video=document.getElementById('playerVideo'),err=document.getElementById('playerError');
+  overlay.classList.add('open');document.getElementById('playerChannelName').textContent=name;video.style.display='block';err.style.display='none';
+  if(hlsInstance){hlsInstance.destroy();hlsInstance=null;}
+  if(Hls.isSupported()){hlsInstance=new Hls({enableWorker:false});hlsInstance.loadSource(url);hlsInstance.attachMedia(video);hlsInstance.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));hlsInstance.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){video.style.display='none';err.style.display='flex';}});}
+  else if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=url;video.play().catch(()=>{video.style.display='none';err.style.display='flex';});}
+  else{video.style.display='none';err.style.display='flex';}
+  speak('Abriendo '+name);
+}
+function closePlayer(){document.getElementById('playerOverlay').classList.remove('open');const v=document.getElementById('playerVideo');v.pause();v.src='';if(hlsInstance){hlsInstance.destroy();hlsInstance=null;}}
+
+// ===== DRAWING =====
+(()=>{
+  const colors=['#FF1493','#FF4500','#FF8C00','#FFD700','#00C800','#00BFFF','#8A2BE2','#FF69B4','#000000','#FFFFFF','#8B4513','#FF6347'];
+  const pal=document.getElementById('colorPalette');pal.style.cssText='display:flex;flex-wrap:wrap;gap:6px;justify-content:center;';
+  let aC='#FF1493',isE=false,curS=null,brushSize=20;
+  colors.forEach(c=>{const b=document.createElement('div');b.className='color-btn'+(c===aC?' active':'');b.style.background=c;b.onclick=()=>{aC=c;isE=false;curS=null;document.querySelectorAll('.color-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');};pal.appendChild(b);});
+  const stickers=['🌟','🌈','🦋','🌸','💎','👑','🎀','🌺','🦄','❤️'];
+  const sRow=document.getElementById('stickersRow');
+  stickers.forEach(s=>{const b=document.createElement('span');b.className='sticker-btn';b.textContent=s;b.onclick=()=>{curS=s;isE=false;};sRow.appendChild(b);});
+  const cv=document.getElementById('drawCanvas');
+  function resize(){cv.width=Math.min(window.innerWidth-16,700);cv.height=Math.min(Math.max(window.innerHeight-260,200),340);}
+  resize();window.addEventListener('resize',resize);
+  const ctx=cv.getContext('2d');let drawing=false;
+  window.setBrush=s=>{brushSize=s;isE=false;curS=null;};
+  window.setEraser=()=>{isE=true;curS=null;};
+  function gP(e){const r=cv.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.clientX-r.left,y:e.clientY-r.top};}
+  function sD(e){e.preventDefault();const p=gP(e);if(curS){ctx.font=`${brushSize*2}px serif`;ctx.fillText(curS,p.x-brushSize,p.y+brushSize);return;}drawing=true;ctx.beginPath();ctx.moveTo(p.x,p.y);}
+  function dr(e){if(!drawing)return;e.preventDefault();const p=gP(e);ctx.lineWidth=brushSize;ctx.lineCap='round';ctx.lineJoin='round';if(isE){ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';}else{ctx.globalCompositeOperation='source-over';ctx.strokeStyle=aC;}ctx.lineTo(p.x,p.y);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x,p.y);}
+  function eD(){drawing=false;ctx.globalCompositeOperation='source-over';}
+  cv.addEventListener('mousedown',sD);cv.addEventListener('mousemove',dr);cv.addEventListener('mouseup',eD);
+  cv.addEventListener('touchstart',sD,{passive:false});cv.addEventListener('touchmove',dr,{passive:false});cv.addEventListener('touchend',eD);
+  window.clearCanvas=()=>{const sp=document.createElement('div');sp.className='sponge-anim';sp.textContent='🧽';document.body.appendChild(sp);setTimeout(()=>{ctx.clearRect(0,0,cv.width,cv.height);sp.remove();},400);speak('¡Pizarra limpia!');};
+})();
+
+// ===== PUZZLE =====
+const puzzleThemes=[
+  {name:'Frutas 🍓',emojis:['🍎','🍌','🍇','🍓','🍊','🍍']},
+  {name:'Animales 🐾',emojis:['🐱','🐶','🐰','🦊','🐸','🐼']},
+  {name:'Flores 🌸',emojis:['🌸','🌺','🌻','🌷','🌹','💐']},
+  {name:'Espacio 🌟',emojis:['⭐','🌟','🌙','☀️','🪐','🌈']},
+  {name:'Princesa 👑',emojis:['👑','💎','🏰','🦄','🎀','🪄']},
+];
+window.initPuzzle=function(pieces){
+  const theme=puzzleThemes[Math.floor(Math.random()*puzzleThemes.length)];
+  const area=document.getElementById('puzzleArea');
+  const emojis=theme.emojis.slice(0,pieces);
+  const shuffled=[...emojis].sort(()=>Math.random()-0.5);
+  const cols=pieces<=2?2:pieces<=4?2:3;
+  const size=Math.min(Math.floor((window.innerWidth-100)/cols),100);
+  area.innerHTML=`<div class="puzzle-container">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <div style="color:var(--purple);font-size:14px;font-family:'Nunito',sans-serif;font-weight:700;">📦 Tus piezas</div>
+      <div class="puzzle-pieces-pool" style="grid-template-columns:repeat(${cols<=2?1:2},1fr);">
+        ${shuffled.map((e,i)=>`<div class="puzzle-piece" draggable="true" data-emoji="${e}" id="piece-${i}" style="width:${size}px;height:${size}px;font-size:${Math.floor(size*0.52)}px;">${e}</div>`).join('')}
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <div style="color:var(--purple);font-size:14px;font-family:'Nunito',sans-serif;font-weight:700;">🎯 ${theme.name}</div>
+      <div class="puzzle-grid" style="grid-template-columns:repeat(${cols},1fr);">
+        ${emojis.map((e,i)=>`<div class="puzzle-slot" data-target="${e}" id="slot-${i}" style="width:${size}px;height:${size}px;"><div class="shadow-label">${i+1}</div></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  let filled=0;
+  document.querySelectorAll('.puzzle-piece').forEach(p=>{p.addEventListener('dragstart',e=>{e.dataTransfer.setData('text',p.dataset.emoji);p.classList.add('dragging');});p.addEventListener('dragend',()=>p.classList.remove('dragging'));});
+  document.querySelectorAll('.puzzle-slot').forEach(slot=>{
+    slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('over');});
+    slot.addEventListener('dragleave',()=>slot.classList.remove('over'));
+    slot.addEventListener('drop',e=>{e.preventDefault();const emoji=e.dataTransfer.getData('text');if(emoji===slot.dataset.target&&!slot.classList.contains('filled')){slot.innerHTML=`<span style="font-size:${Math.floor(size*0.52)}px;">${emoji}</span>`;slot.classList.add('filled');document.querySelector(`.puzzle-piece[data-emoji="${emoji}"]`)?.remove();playNote(523+filled*80);filled++;if(filled===pieces)setTimeout(()=>{celebrate();earnSticker();},300);}else slot.classList.remove('over');});
+  });
+  // Touch drag
+  let drg=null,ghost=null;
+  document.querySelectorAll('.puzzle-piece').forEach(p=>{
+    p.addEventListener('touchstart',()=>{drg=p;ghost=p.cloneNode(true);ghost.style.cssText=`position:fixed;opacity:0.7;pointer-events:none;z-index:9999;font-size:${Math.floor(size*0.52)}px;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:white;border-radius:12px;border:3px solid #C26DFF;`;document.body.appendChild(ghost);},{passive:true});
+    p.addEventListener('touchmove',e=>{if(!ghost)return;const t=e.touches[0];ghost.style.left=(t.clientX-size/2)+'px';ghost.style.top=(t.clientY-size/2)+'px';},{passive:true});
+    p.addEventListener('touchend',e=>{if(!drg||!ghost)return;ghost.remove();ghost=null;const t=e.changedTouches[0];const el=document.elementFromPoint(t.clientX,t.clientY);const slot=el?.closest('.puzzle-slot');if(slot&&drg.dataset.emoji===slot.dataset.target&&!slot.classList.contains('filled')){slot.innerHTML=`<span style="font-size:${Math.floor(size*0.52)}px;">${drg.dataset.emoji}</span>`;slot.classList.add('filled');drg.remove();playNote(523+filled*80);filled++;if(filled===pieces)setTimeout(()=>{celebrate();earnSticker();},300);}drg=null;},{passive:true});
+  });
+};
+
+// ===== SHAPES =====
+const shapesZones={
+  easy:[
+    {id:'red',label:'🔴 Rojos',borderColor:'#CC0000',bg:'rgba(255,80,80,0.12)',items:['🍎','❤️','🌹','🍓','🌶️','🎈']},
+    {id:'yellow',label:'🟡 Amarillos',borderColor:'#CCA800',bg:'rgba(255,215,0,0.12)',items:['🌟','🍌','🌻','🐤','🌙','🍋']},
+  ],
+  hard:[
+    {id:'red',label:'🔴 Rojos',borderColor:'#CC0000',bg:'rgba(255,80,80,0.12)',items:['🍎','❤️','🌹','🍓']},
+    {id:'yellow',label:'🟡 Amarillos',borderColor:'#CCA800',bg:'rgba(255,215,0,0.12)',items:['🌟','🍌','🌻','🐤']},
+    {id:'blue',label:'🔵 Azules',borderColor:'#0044CC',bg:'rgba(0,100,255,0.12)',items:['💙','🫐','🐦','🔷']},
+  ]
+};
+window.initShapes=function(mode='hard'){
+  const zones=shapesZones[mode];
+  const game=document.getElementById('shapesGame');
+  const allItems=zones.flatMap(z=>z.items.slice(0,mode==='easy'?3:2).map(e=>({emoji:e,zone:z.id})));
+  const shuffled=allItems.sort(()=>Math.random()-0.5);
+  game.innerHTML=`<div class="shapes-game">
+    <div class="drag-items-pool">${shuffled.map((it,i)=>`<span class="drag-item" draggable="true" data-zone="${it.zone}" id="sitem-${i}">${it.emoji}</span>`).join('')}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
+      ${zones.map(z=>`<div class="drop-zone" data-zone="${z.id}" style="border-color:${z.borderColor};background:${z.bg};">
+        <div class="drop-zone-label" style="color:${z.borderColor};">${z.label}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  let placed=0,total=shuffled.length;
+  document.querySelectorAll('.drag-item').forEach(item=>{item.addEventListener('dragstart',e=>{e.dataTransfer.setData('text',item.id+'|'+item.dataset.zone);});});
+  document.querySelectorAll('.drop-zone').forEach(zone=>{
+    zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('over');});
+    zone.addEventListener('dragleave',()=>zone.classList.remove('over'));
+    zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('over');const[itemId,itemZone]=e.dataTransfer.getData('text').split('|');if(itemZone===zone.dataset.zone){const el=document.getElementById(itemId);if(el){const sp=document.createElement('span');sp.style.cssText='font-size:30px;animation:popIn 0.3s ease;';sp.textContent=el.textContent;zone.appendChild(sp);el.remove();playNote(659+placed*50);placed++;if(placed===total)setTimeout(()=>{celebrate();earnSticker('🌟');},300);}}});
+  });
+  let tItem=null,tGhost=null;
+  document.querySelectorAll('.drag-item').forEach(item=>{
+    item.addEventListener('touchstart',()=>{tItem=item;tGhost=document.createElement('span');tGhost.textContent=item.textContent;tGhost.style.cssText='position:fixed;font-size:44px;pointer-events:none;z-index:9999;filter:drop-shadow(2px 2px 6px rgba(0,0,0,0.3));';document.body.appendChild(tGhost);},{passive:true});
+    item.addEventListener('touchmove',e=>{if(!tGhost)return;tGhost.style.left=(e.touches[0].clientX-22)+'px';tGhost.style.top=(e.touches[0].clientY-22)+'px';},{passive:true});
+    item.addEventListener('touchend',e=>{if(!tItem)return;tGhost?.remove();tGhost=null;const t=e.changedTouches[0];const zone=document.elementFromPoint(t.clientX,t.clientY)?.closest('.drop-zone');if(zone&&tItem.dataset.zone===zone.dataset.zone){const sp=document.createElement('span');sp.style.cssText='font-size:30px;animation:popIn 0.3s ease;';sp.textContent=tItem.textContent;zone.appendChild(sp);tItem.remove();playNote(659+placed*50);placed++;if(placed===total)setTimeout(()=>{celebrate();earnSticker('🌟');},300);}tItem=null;},{passive:true});
+  });
+};
+
+// ===== MEMORY =====
+const memThemes=[
+  {name:'Princesa',emojis:['👑','💎','🏰','🦄','🎀','🪄','🌸','🌟']},
+  {name:'Animales',emojis:['🐱','🐶','🐰','🦊','🐸','🐼','🐨','🦁']},
+  {name:'Espacio',emojis:['⭐','🌙','☀️','🪐','🌈','💫','🌟','🚀']},
+];
+window.initMemory=function(pairs){
+  const grid=document.getElementById('memoryGrid');
+  const theme=memThemes[Math.floor(Math.random()*memThemes.length)];
+  const cols=pairs<=4?4:pairs<=6?4:4;
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  const selected=theme.emojis.slice(0,pairs);
+  const cards=[...selected,...selected].sort(()=>Math.random()-0.5);
+  let flipped=[],matched=0,locked=false;
+  const cardSize=Math.min(Math.floor((window.innerWidth-40)/cols),90);
+  grid.innerHTML=cards.map((e,i)=>`<div class="mem-card" data-emoji="${e}" style="width:${cardSize}px;height:${cardSize}px;">
+    <div class="mem-card-inner">
+      <div class="mem-card-front" style="font-size:${Math.floor(cardSize*0.4)}px;">👑</div>
+      <div class="mem-card-back" style="font-size:${Math.floor(cardSize*0.5)}px;">${e}</div>
+    </div>
+  </div>`).join('');
+  grid.querySelectorAll('.mem-card').forEach(card=>{
+    card.addEventListener('click',()=>{
+      if(locked||card.classList.contains('flipped')||card.classList.contains('matched'))return;
+      card.classList.add('flipped');flipped.push(card);playNote(523+matched*40);
+      if(flipped.length===2){locked=true;setTimeout(()=>{
+        if(flipped[0].dataset.emoji===flipped[1].dataset.emoji){flipped.forEach(c=>c.classList.add('matched'));matched++;playSuccess();speak('¡Muy bien!');if(matched===pairs)setTimeout(()=>{celebrate();earnSticker('💎');},400);}
+        else{flipped.forEach(c=>c.classList.remove('flipped'));}
+        flipped=[];locked=false;
+      },900);}
+    });
+  });
+};
+
+// ===== BUTTERFLY =====
+const BF_COLORS=[
+  {glow:'rgba(110,198,255,0.7)',flowerEmoji:'🌸',note:523},
+  {glow:'rgba(255,159,64,0.7)',flowerEmoji:'🌻',note:587},
+  {glow:'rgba(195,155,211,0.7)',flowerEmoji:'🌷',note:659},
+  {glow:'rgba(247,220,111,0.7)',flowerEmoji:'🌼',note:698},
+  {glow:'rgba(241,148,138,0.7)',flowerEmoji:'🌺',note:784},
+  {glow:'rgba(130,224,170,0.7)',flowerEmoji:'🍀',note:880},
+];
+const HUE_ROTATIONS=[0,60,120,180,240,300];
+let bfScore=0,bfTimer=null,bfSpawnTimer=null,bfTimeLeft=40,bfRunning=false;
+window.initButterflies=function(){
+  const bg=document.getElementById('gardenFlowersBg');bg.innerHTML='';
+  const fl=['🌸','🌺','🌻','🌼','🌷','🌿','🍀','🌱'];
+  for(let i=0;i<22;i++){const sp=document.createElement('span');sp.textContent=fl[Math.floor(Math.random()*fl.length)];sp.style.cssText=`position:absolute;bottom:${Math.random()*28}%;left:${(i/22)*100+Math.random()*3}%;font-size:${22+Math.floor(Math.random()*18)}px;opacity:${0.7+Math.random()*0.3};`;bg.appendChild(sp);}
+  document.getElementById('bfIntro').style.display='flex';document.getElementById('bfEnd').style.display='none';
+  document.getElementById('butterfliesLayer').innerHTML='';document.getElementById('bfParticles').innerHTML='';
+  bfScore=0;document.getElementById('bfScore').textContent='⭐ 0';
+};
+window.startButterflyGame=function(){
+  document.getElementById('bfIntro').style.display='none';document.getElementById('bfEnd').style.display='none';
+  document.getElementById('butterfliesLayer').innerHTML='';document.getElementById('bfParticles').innerHTML='';
+  bfScore=0;bfTimeLeft=40;bfRunning=true;
+  document.getElementById('bfScore').textContent='⭐ 0';
+  document.getElementById('bfTimerBar').style.width='100%';
+  spawnButterfly();
+  bfSpawnTimer=setInterval(()=>{if(bfRunning)spawnButterfly();},2200);
+  bfTimer=setInterval(()=>{bfTimeLeft--;const pct=(bfTimeLeft/40)*100;const bar=document.getElementById('bfTimerBar');bar.style.width=pct+'%';bar.style.background=pct>50?'linear-gradient(90deg,#FFD700,#FF6EB4)':pct>25?'linear-gradient(90deg,#FFA500,#FF4444)':'linear-gradient(90deg,#FF4444,#CC0000)';if(bfTimeLeft<=0)endButterflyGame();},1000);
+};
+function spawnButterfly(){
+  const layer=document.getElementById('butterfliesLayer');
+  const cd=BF_COLORS[Math.floor(Math.random()*BF_COLORS.length)];
+  const hue=HUE_ROTATIONS[Math.floor(Math.random()*HUE_ROTATIONS.length)];
+  const W=window.innerWidth,H=window.innerHeight-60;
+  const el=document.createElement('div');el.className='butterfly';
+  el.innerHTML=`<span style="filter:hue-rotate(${hue}deg) drop-shadow(0 0 8px ${cd.glow});">🦋</span>`;
+  let x=Math.random()*(W-80)+20,y=Math.random()*(H*0.55)+60;
+  el.style.left=x+'px';el.style.top=y+'px';layer.appendChild(el);
+  let t=0,dX=(Math.random()*1.5+0.8)*(Math.random()<0.5?1:-1),dY=(Math.random()*0.8+0.4)*(Math.random()<0.5?1:-1);
+  let fId;
+  function fly(){if(!bfRunning||!el.parentNode)return;t+=0.02;x+=dX+Math.sin(t*2)*1.5;y+=dY+Math.cos(t*1.5)*1.2;if(x<10||x>W-80){dX*=-1;x=Math.max(10,Math.min(W-80,x));}if(y<65||y>H-80){dY*=-1;y=Math.max(65,Math.min(H-80,y));}el.style.left=x+'px';el.style.top=y+'px';const flap=1+0.12*Math.sin(t*18);el.style.transform=`scale(${flap},1) scaleX(${dX>0?1:-1})`;fId=requestAnimationFrame(fly);}
+  fId=requestAnimationFrame(fly);
+  function catchBf(e){e.preventDefault();if(el.classList.contains('caught'))return;cancelAnimationFrame(fId);el.classList.add('caught');const rect=el.getBoundingClientRect();spawnStarParticles(rect.left+rect.width/2,rect.top+rect.height/2);playNote(cd.note);bfScore++;document.getElementById('bfScore').textContent='⭐ '+bfScore;speak('¡Muy bien!');setTimeout(()=>{el.remove();landOnFlower(cd,hue);},400);}
+  el.addEventListener('click',catchBf);el.addEventListener('touchstart',catchBf,{passive:false});
+  setTimeout(()=>{if(el.parentNode){cancelAnimationFrame(fId);el.remove();}},8000);
+}
+function spawnStarParticles(cx,cy){const layer=document.getElementById('bfParticles');const pe=['⭐','✨','💫','🌟'];for(let i=0;i<8;i++){const p=document.createElement('div');p.className='star-particle';const angle=Math.random()*Math.PI*2,dist=40+Math.random()*60;p.style.cssText=`left:${cx-12}px;top:${cy-12}px;--dx:${Math.cos(angle)*dist}px;--dy:${Math.sin(angle)*dist}px;animation-delay:${i*0.04}s;`;p.textContent=pe[Math.floor(Math.random()*pe.length)];layer.appendChild(p);setTimeout(()=>p.remove(),900);}}
+function landOnFlower(cd,hue){const layer=document.getElementById('butterfliesLayer');const W=window.innerWidth,H=window.innerHeight;const el=document.createElement('div');el.className='bf-resting';el.style.cssText=`left:${20+Math.random()*(W-80)}px;top:${H*0.52+Math.random()*(H*0.3)}px;`;el.innerHTML=`${cd.flowerEmoji}<span style="font-size:22px;filter:hue-rotate(${hue}deg);">🦋</span>`;layer.appendChild(el);setTimeout(()=>{if(el.parentNode)el.remove();},5000);}
+function endButterflyGame(){bfRunning=false;clearInterval(bfTimer);clearInterval(bfSpawnTimer);document.getElementById('butterfliesLayer').innerHTML='';const msg=document.getElementById('bfEndMsg');if(bfScore>=15)msg.innerHTML=`¡Increíble! Atrapaste <strong>${bfScore} mariposas</strong>! 🏆`;else if(bfScore>=8)msg.innerHTML=`¡Muy bien! Atrapaste <strong>${bfScore} mariposas</strong>! 🌟`;else msg.innerHTML=`Atrapaste <strong>${bfScore} mariposas</strong>. ¡Inténtalo de nuevo! 💪`;document.getElementById('bfEnd').style.display='flex';if(bfScore>=5){earnSticker('🦋');if(bfScore>=8)celebrate();}speak('¡Tiempo! Atrapaste '+bfScore+' mariposas.');}
+window.stopButterflies=function(){bfRunning=false;clearInterval(bfTimer);clearInterval(bfSpawnTimer);document.getElementById('butterfliesLayer').innerHTML='';document.getElementById('bfParticles').innerHTML='';};
+
+// ===== SHADOW GAME =====
+const SHADOW_SETS=[
+  [{emoji:'👑',name:'corona'},{emoji:'🪄',name:'varita'},{emoji:'💎',name:'joya'},{emoji:'🏰',name:'castillo'},{emoji:'🌙',name:'luna'},{emoji:'🎀',name:'lazo'}],
+  [{emoji:'🦄',name:'unicornio'},{emoji:'🌸',name:'flor'},{emoji:'⭐',name:'estrella'},{emoji:'🎪',name:'carpa'},{emoji:'🌈',name:'arcoiris'},{emoji:'🔮',name:'bola mágica'}],
+];
+window.initShadow=function(){
+  const board=document.getElementById('shadowBoard');board.innerHTML='';
+  const set=SHADOW_SETS[Math.floor(Math.random()*SHADOW_SETS.length)];
+  const count=Math.min(4,set.length);
+  const items=set.slice(0,count);
+  const shuffledItems=[...items].sort(()=>Math.random()-0.5);
+  // Shadows row
+  const shadowsRow=document.createElement('div');shadowsRow.className='shadow-row';
+  items.forEach((item,i)=>{
+    const slot=document.createElement('div');slot.className='shadow-slot';slot.dataset.target=item.emoji;slot.id='sslot-'+i;slot.innerHTML=`<span>${item.emoji}</span><div class="shadow-label">${item.name}</div>`;
+    shadowsRow.appendChild(slot);
+  });
+  // Items row
+  const itemsRow=document.createElement('div');itemsRow.className='shadow-row';itemsRow.style.cssText='margin-top:8px;';
+  shuffledItems.forEach((item,i)=>{
+    const el=document.createElement('div');el.className='shadow-item';el.draggable=true;el.dataset.emoji=item.emoji;el.id='sobj-'+i;el.textContent=item.emoji;
+    itemsRow.appendChild(el);
+  });
+  const label=document.createElement('div');label.style.cssText='color:rgba(255,255,255,0.7);font-family:"Nunito",sans-serif;font-size:13px;text-align:center;margin-top:4px;';label.textContent='⬆️ Arrastra cada objeto a su sombra';
+  board.appendChild(shadowsRow);board.appendChild(itemsRow);board.appendChild(label);
+  let matched=0;
+  // Drag desktop
+  document.querySelectorAll('.shadow-item').forEach(obj=>{obj.addEventListener('dragstart',e=>{e.dataTransfer.setData('text',obj.dataset.emoji);obj.classList.add('dragging');});obj.addEventListener('dragend',()=>obj.classList.remove('dragging'));});
+  document.querySelectorAll('.shadow-slot').forEach(slot=>{
+    slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('over');});
+    slot.addEventListener('dragleave',()=>slot.classList.remove('over'));
+    slot.addEventListener('drop',e=>{e.preventDefault();slot.classList.remove('over');const emoji=e.dataTransfer.getData('text');if(emoji===slot.dataset.target&&!slot.classList.contains('filled')){slot.innerHTML=`<span>${emoji}</span>`;slot.classList.add('filled');document.querySelector(`.shadow-item[data-emoji="${emoji}"]`)?.remove();playNote(523+matched*120);matched++;if(matched===count)setTimeout(()=>{celebrate();earnSticker('🌑');},300);}else{slot.style.animation='shake 0.3s ease';setTimeout(()=>slot.style.animation='',300);}});
+  });
+  // Touch drag
+  let tObj=null,tGhost=null;
+  document.querySelectorAll('.shadow-item').forEach(obj=>{
+    obj.addEventListener('touchstart',()=>{tObj=obj;tGhost=document.createElement('div');tGhost.textContent=obj.textContent;tGhost.style.cssText='position:fixed;font-size:56px;pointer-events:none;z-index:9999;';document.body.appendChild(tGhost);},{passive:true});
+    obj.addEventListener('touchmove',e=>{if(!tGhost)return;tGhost.style.left=(e.touches[0].clientX-30)+'px';tGhost.style.top=(e.touches[0].clientY-30)+'px';},{passive:true});
+    obj.addEventListener('touchend',e=>{if(!tObj)return;tGhost?.remove();tGhost=null;const t=e.changedTouches[0];const slot=document.elementFromPoint(t.clientX,t.clientY)?.closest('.shadow-slot');if(slot&&tObj.dataset.emoji===slot.dataset.target&&!slot.classList.contains('filled')){slot.innerHTML=`<span>${tObj.dataset.emoji}</span>`;slot.classList.add('filled');tObj.remove();playNote(523+matched*120);matched++;if(matched===count)setTimeout(()=>{celebrate();earnSticker('🌑');},300);}tObj=null;},{passive:true});
+  });
+};
+
+// ===== JEWEL GAME =====
+const JEWELS=[
+  {emoji:'💎',color:'#00BFFF',shine:'#E0F8FF',name:'diamante'},
+  {emoji:'💚',color:'#2ECC40',shine:'#DFFFDF',name:'esmeralda'},
+  {emoji:'❤️',color:'#FF3333',shine:'#FFE0E0',name:'rubí'},
+  {emoji:'💜',color:'#9B59B6',shine:'#F0E0FF',name:'amatista'},
+  {emoji:'🔶',color:'#FF8C00',shine:'#FFF0DC',name:'topacio'},
+];
+window.initJewel=function(){
+  const cv=document.getElementById('jewelCanvas');
+  const wrap=cv.parentElement;
+  const S=Math.min(wrap.clientWidth-20,wrap.clientHeight-20,320);
+  cv.width=S;cv.height=S;
+  const ctx=cv.getContext('2d');
+  const jewel=JEWELS[Math.floor(Math.random()*JEWELS.length)];
+  document.getElementById('jewelComplete').style.display='none';
+  document.getElementById('jewelProgress').style.width='0%';
+  document.getElementById('jewelShineEmoji').textContent=jewel.emoji;
+  speak('¡Frota la joya con el dedo para limpiarla!');
+  // Draw jewel base
+  function drawJewel(){
+    ctx.clearRect(0,0,S,S);
+    // Jewel shape (hexagon)
+    ctx.save();ctx.translate(S/2,S/2);
+    const R=S*0.38;
+    ctx.beginPath();
+    for(let i=0;i<6;i++){const a=i*Math.PI/3-Math.PI/6;ctx.lineTo(R*Math.cos(a),R*Math.sin(a));}
+    ctx.closePath();
+    const grd=ctx.createRadialGradient(0,-R*0.2,R*0.05,0,0,R);
+    grd.addColorStop(0,'#fff');grd.addColorStop(0.3,jewel.shine);grd.addColorStop(1,jewel.color);
+    ctx.fillStyle=grd;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=3;ctx.stroke();
+    // Facets
+    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1.5;
+    [[0,-R*0.6,R*0.5,R*0.3],[0,-R*0.6,-R*0.5,R*0.3],[R*0.5,R*0.3,-R*0.5,R*0.3],[0,-R*0.6,0,R*0.6]].forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();});
+    ctx.restore();
+  }
+  drawJewel();
+  // Dirt overlay
+  const dirtyCanvas=document.createElement('canvas');dirtyCanvas.width=S;dirtyCanvas.height=S;
+  const dCtx=dirtyCanvas.getContext('2d');
+  const dGrd=dCtx.createRadialGradient(S/2,S/2,S*0.05,S/2,S/2,S*0.5);
+  dGrd.addColorStop(0,'rgba(80,50,20,0.95)');dGrd.addColorStop(0.6,'rgba(100,70,30,0.9)');dGrd.addColorStop(1,'rgba(120,90,40,0.7)');
+  dCtx.fillStyle=dGrd;dCtx.fillRect(0,0,S,S);
+  // Add noise patches
+  for(let i=0;i<30;i++){dCtx.beginPath();dCtx.arc(Math.random()*S,Math.random()*S,Math.random()*20+5,0,Math.PI*2);dCtx.fillStyle=`rgba(60,40,10,${0.3+Math.random()*0.4})`;dCtx.fill();}
+  ctx.drawImage(dirtyCanvas,0,0);
+  let totalPixels=S*S,clearedPixels=0,isDrawing=false,lastProgress=0;
+  function scrub(x,y){
+    ctx.save();ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.arc(x,y,28,0,Math.PI*2);ctx.fill();ctx.restore();
+    // Check progress
+    const imgData=ctx.getImageData(0,0,S,S).data;
+    let transparent=0;
+    for(let i=3;i<imgData.length;i+=4){if(imgData[i]<50)transparent++;}
+    // Approx: transparent over jewel area
+    const progress=Math.min(100,Math.floor((transparent/(totalPixels*0.7))*100));
+    document.getElementById('jewelProgress').style.width=progress+'%';
+    if(progress>=95&&lastProgress<95){lastProgress=95;completeJewel(jewel);}
+  }
+  function getXY(e){const r=cv.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.clientX-r.left,y:e.clientY-r.top};}
+  cv.onmousedown=e=>{isDrawing=true;const p=getXY(e);scrub(p.x,p.y);};
+  cv.onmousemove=e=>{if(!isDrawing)return;const p=getXY(e);scrub(p.x,p.y);};
+  cv.onmouseup=()=>isDrawing=false;
+  cv.ontouchstart=e=>{e.preventDefault();isDrawing=true;const p=getXY(e);scrub(p.x,p.y);};
+  cv.ontouchmove=e=>{e.preventDefault();if(!isDrawing)return;const p=getXY(e);scrub(p.x,p.y);};
+  cv.ontouchend=()=>isDrawing=false;
+};
+function completeJewel(jewel){
+  playFanfare();speak('¡La joya brilla como una princesa!');
+  document.getElementById('jewelComplete').style.display='flex';
+  earnSticker('💎');
+}
+
+// ===== STICKER ALBUM =====
+let albumSelectedSticker=null;
+window.initAlbum=function(){
+  // Build tray from earned stickers
+  const tray=document.getElementById('stickerTray');tray.innerHTML='';
+  // Always show all stickers (earn by playing, but show them all for fun)
+  const toShow=ALL_STICKERS;
+  toShow.forEach(s=>{
+    const el=document.createElement('div');el.className='album-sticker';el.textContent=s;
+    el.onclick=()=>{
+      document.querySelectorAll('.album-sticker').forEach(x=>x.classList.remove('selected'));
+      el.classList.add('selected');albumSelectedSticker=s;
+    };
+    tray.appendChild(el);
+  });
+  // Draw castle background on canvas
+  const cv=document.getElementById('albumCanvas');
+  const W=window.innerWidth,H=window.innerHeight-120;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  // Sky gradient
+  const sky=ctx.createLinearGradient(0,0,0,H*0.55);sky.addColorStop(0,'#87CEEB');sky.addColorStop(1,'#C5E8FF');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*0.55);
+  // Ground
+  const gnd=ctx.createLinearGradient(0,H*0.55,0,H);gnd.addColorStop(0,'#5DBB63');gnd.addColorStop(0.3,'#2D7A1F');gnd.addColorStop(1,'#1a5c10');
+  ctx.fillStyle=gnd;ctx.fillRect(0,H*0.55,W,H);
+  // Castle body
+  const cx=W/2,cy=H*0.48;
+  ctx.fillStyle='#C26DFF';ctx.beginPath();ctx.rect(cx-100,cy-80,200,130);ctx.fill();
+  ctx.fillStyle='#9B4FD0';ctx.beginPath();ctx.rect(cx-80,cy-70,160,120);ctx.fill();
+  // Towers
+  [[cx-120,cy-130,60,150],[cx+60,cy-130,60,150]].forEach(([tx,ty,tw,th])=>{ctx.fillStyle='#A855D8';ctx.beginPath();ctx.rect(tx,ty,tw,th);ctx.fill();ctx.fillStyle='#FF1493';ctx.beginPath();ctx.moveTo(tx+tw/2,ty-60);ctx.lineTo(tx,ty);ctx.lineTo(tx+tw,ty);ctx.closePath();ctx.fill();});
+  // Windows
+  ctx.fillStyle='#87CEEB';[[cx-50,cy-50],[cx+20,cy-50],[cx-20,cy-10]].forEach(([wx,wy])=>{ctx.beginPath();ctx.arc(wx+10,wy,15,Math.PI,0);ctx.rect(wx,wy,20,20);ctx.fill();});
+  // Door
+  ctx.fillStyle='#8B4513';ctx.beginPath();ctx.arc(cx,cy+40,22,Math.PI,0);ctx.rect(cx-22,cy+40,44,30);ctx.fill();
+  // Stars in sky
+  for(let i=0;i<15;i++){ctx.fillStyle='#FFD700';const sx=Math.random()*W,sy=Math.random()*(H*0.4);const r=2+Math.random()*3;ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();}
+  // Flowers at bottom
+  const fl=['🌸','🌺','🌻','🌼'];for(let i=0;i<12;i++){ctx.font=`${18+Math.floor(Math.random()*14)}px serif`;ctx.fillText(fl[Math.floor(Math.random()*fl.length)],i*(W/12)+Math.random()*20,H*0.58+Math.random()*20);}
+  // Moon
+  ctx.fillStyle='#FFFFF0';ctx.beginPath();ctx.arc(W-60,50,28,0,Math.PI*2);ctx.fill();ctx.fillStyle='#87CEEB';ctx.beginPath();ctx.arc(W-48,44,22,0,Math.PI*2);ctx.fill();
+  // Click/touch to place sticker
+  const placed=document.getElementById('albumStickersPlaced');placed.innerHTML='';
+  function placeSticker(x,y){
+    if(!albumSelectedSticker)return;
+    const el=document.createElement('div');el.className='album-placed';el.textContent=albumSelectedSticker;el.style.left=(x-20)+'px';el.style.top=(y-20)+'px';
+    placed.appendChild(el);
+    makeDraggable(el);
+  }
+  cv.onclick=e=>{const r=cv.getBoundingClientRect();placeSticker(e.clientX-r.left,e.clientY-r.top);};
+  cv.ontouchend=e=>{e.preventDefault();const t=e.changedTouches[0];const r=cv.getBoundingClientRect();placeSticker(t.clientX-r.left,t.clientY-r.top);};
+  // Load saved stickers
+  const saved=JSON.parse(localStorage.getItem('val_album_stickers')||'[]');
+  saved.forEach(({emoji,x,y})=>{const el=document.createElement('div');el.className='album-placed';el.textContent=emoji;el.style.left=x+'px';el.style.top=y+'px';placed.appendChild(el);makeDraggable(el);});
+};
+function makeDraggable(el){
+  let startX,startY,origX,origY,isDragging=false;
+  function getPos(e){return e.touches?{x:e.touches[0].clientX,y:e.touches[0].clientY}:{x:e.clientX,y:e.clientY};}
+  el.addEventListener('mousedown',e=>{e.stopPropagation();isDragging=true;const p=getPos(e);startX=p.x;startY=p.y;origX=parseInt(el.style.left);origY=parseInt(el.style.top);});
+  el.addEventListener('touchstart',e=>{e.stopPropagation();isDragging=true;const p=getPos(e);startX=p.x;startY=p.y;origX=parseInt(el.style.left);origY=parseInt(el.style.top);},{passive:true});
+  document.addEventListener('mousemove',e=>{if(!isDragging)return;const p=getPos(e);el.style.left=(origX+p.x-startX)+'px';el.style.top=(origY+p.y-startY)+'px';});
+  el.addEventListener('touchmove',e=>{if(!isDragging)return;e.preventDefault();const p=getPos(e);el.style.left=(origX+p.x-startX)+'px';el.style.top=(origY+p.y-startY)+'px';},{passive:false});
+  document.addEventListener('mouseup',()=>{if(isDragging){isDragging=false;saveAlbum();}});
+  el.addEventListener('touchend',()=>{isDragging=false;saveAlbum();});
+}
+function saveAlbum(){
+  const placed=document.getElementById('albumStickersPlaced');
+  const data=Array.from(placed.children).map(el=>({emoji:el.textContent,x:parseInt(el.style.left),y:parseInt(el.style.top)}));
+  localStorage.setItem('val_album_stickers',JSON.stringify(data));
+}
+window.clearAlbum=function(){document.getElementById('albumStickersPlaced').innerHTML='';localStorage.removeItem('val_album_stickers');speak('¡Álbum limpio! Añade nuevas pegatinas.');};
+
+// ===== CELEBRATION =====
+function celebrate(){document.getElementById('celebration').classList.add('show');speak('¡Muy bien Valentina! ¡Eres una princesa superlista!');const colors=['#FF6EB4','#FFD700','#C26DFF','#87CEEB','#FF7F7F','#98FFD6'];for(let i=0;i<60;i++){setTimeout(()=>{const d=document.createElement('div');d.className='confetti-piece';d.style.cssText=`left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};width:${Math.random()*12+6}px;height:${Math.random()*12+6}px;border-radius:${Math.random()>0.5?'50%':'2px'};animation-duration:${Math.random()*2+1.5}s;`;document.body.appendChild(d);setTimeout(()=>d.remove(),3500);},i*40);}}
+function hideCelebration(){document.getElementById('celebration').classList.remove('show');}
+
+// ===== INIT =====
+window.addEventListener('load',()=>{
+  setTimeout(()=>speak('¡Hola Princesa Valentina! Bienvenida a tu castillo mágico'),700);
+  initPuzzle(4);initShapes('hard');initMemory(6);initButterflies();initShadow();initAlbum();
+});
+</script>
+</body>
+</html>
